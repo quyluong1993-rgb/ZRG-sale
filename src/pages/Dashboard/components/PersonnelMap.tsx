@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, MapPin, Clock, Camera, Navigation } from 'lucide-react';
 
 // Fix for default marker icons in Vite/React
+// @ts-ignore
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
+// @ts-ignore
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 let DefaultIcon = L.icon({
@@ -15,170 +16,119 @@ let DefaultIcon = L.icon({
   iconSize: [25, 41],
   iconAnchor: [12, 41]
 });
+
 L.Marker.prototype.options.icon = DefaultIcon;
 
-interface PersonnelLocation {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
-  lastUpdate: string;
-  shopName?: string;
-}
-
-const SetViewOnClick = ({ coords }: { coords: [number, number] }) => {
+// Tăng cường tính năng cho Map
+const MapController = ({ center }: { center: [number, number] }) => {
   const map = useMap();
   useEffect(() => {
-    map.setView(coords, map.getZoom());
-  }, [coords]);
+    map.setView(center);
+  }, [center, map]);
   return null;
 };
 
-const PersonnelMap = ({ locations }: { locations: PersonnelLocation[] }) => {
-  const [selectedStaff, setSelectedStaff] = useState<PersonnelLocation | null>(null);
-  const defaultCenter: [number, number] = [21.0285, 105.8542]; // Hanoi
-  
-  // Use first location or Hanoi center
-  const center = locations.length > 0 ? [locations[0].lat, locations[0].lng] as [number, number] : defaultCenter;
+interface PersonnelMapProps {
+  locations: any[];
+}
+
+const PersonnelMap: React.FC<PersonnelMapProps> = ({ locations = [] }) => {
+  const [selectedStaff, setSelectedStaff] = useState<any>(null);
+  const defaultCenter: [number, number] = [10.762622, 106.660172]; // HCM City
 
   return (
-    <div className="lg:col-span-2 rugged-card overflow-hidden h-[450px] relative">
-      <div className="absolute top-4 left-4 z-[1000] bg-surface/90 backdrop-blur-sm p-3 rounded-lg border border-outline-variant shadow-lg pointer-events-none">
-        <h3 className="font-label-bold text-on-surface flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-sm">distance</span>
-          Bản đồ Thực địa (Real-time)
-        </h3>
-        <p className="text-[10px] text-on-surface-variant">Đang giám sát {locations.length} nhân sự</p>
+    <div className="lg:col-span-2 bg-surface-container-lowest border-2 border-outline-variant rounded-2xl overflow-hidden shadow-sm flex flex-col h-[500px]">
+      <div className="p-4 border-b-2 border-outline-variant flex justify-between items-center bg-surface-container-low">
+        <div className="flex items-center gap-3">
+          <div className="w-1.5 h-6 bg-primary rounded-full"></div>
+          <span className="font-headline-sm text-sm uppercase tracking-widest font-black text-on-surface-variant">VỊ TRÍ NHÂN SỰ THỰC ĐỊA</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-md text-[10px] font-black uppercase tracking-tighter">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+            {locations.length} ONLINE
+          </div>
+        </div>
       </div>
 
-      <MapContainer 
-        center={center} 
-        zoom={13} 
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={true}
-      >
-        <>
+      <div className="flex-1 relative">
+        <MapContainer 
+          center={defaultCenter} 
+          zoom={13} 
+          className="h-full w-full"
+          scrollWheelZoom={true}
+          zoomControl={false}
+        >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {locations.map((loc) => (
+          <ZoomControl position="bottomright" />
+          
+          {locations.map((staff) => (
             <Marker 
-              key={loc.id} 
-              position={[loc.lat, loc.lng]}
+              key={staff.id} 
+              position={[staff.lat, staff.lng]}
               eventHandlers={{
-                click: () => setSelectedStaff(loc)
+                click: () => setSelectedStaff(staff),
               }}
             >
-              <Tooltip permanent direction="top" offset={[0, -40]} className="rugged-tooltip">
-                <span className="font-label-bold text-xs">{loc.name}</span>
-              </Tooltip>
+              <Popup className="custom-popup">
+                <div className="p-1 min-w-[150px]">
+                  <div className="font-black text-primary text-xs uppercase mb-1">{staff.name}</div>
+                  <div className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                    <MapPin size={10} /> {staff.lastCheckinShop}
+                  </div>
+                </div>
+              </Popup>
             </Marker>
           ))}
-          {locations.length > 0 && <SetViewOnClick coords={center} />}
-        </>
-      </MapContainer>
+          
+          {selectedStaff && <MapController center={[selectedStaff.lat, selectedStaff.lng]} />}
+        </MapContainer>
 
-      <AnimatePresence>
+        {/* Overlay Panel khi chọn nhân sự */}
         {selectedStaff && (
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="absolute top-0 right-0 h-full w-80 z-[2000] bg-white shadow-2xl border-l border-outline-variant flex flex-col"
-          >
-            <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <User size={18} />
+          <div className="absolute top-4 left-4 z-[1000] w-64 bg-white/95 backdrop-blur-md border-2 border-primary/20 rounded-2xl shadow-xl animate-in slide-in-from-left duration-300">
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                  <User size={24} />
                 </div>
-                <h3 className="font-bold text-on-surface">Chi tiết Nhân sự</h3>
+                <button 
+                  onClick={() => setSelectedStaff(null)}
+                  className="p-1.5 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <X size={18} />
+                </button>
               </div>
-              <button 
-                onClick={() => setSelectedStaff(null)}
-                className="p-1 hover:bg-surface-variant rounded-full transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Họ tên nhân viên</div>
-                  <div className="text-lg font-bold text-on-surface">{selectedStaff.name}</div>
-                  <div className="text-xs text-on-surface-variant flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Đang trực tuyến
-                  </div>
+              
+              <h3 className="font-black text-on-surface uppercase leading-tight mb-1">{selectedStaff.name}</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Mã NV: {selectedStaff.id}</p>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 text-xs">
+                  <div className="p-1.5 bg-slate-50 rounded-lg text-slate-400"><MapPin size={14} /></div>
+                  <div className="font-medium text-on-surface-variant truncate">{selectedStaff.lastCheckinShop}</div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Cập nhật cuối</div>
-                    <div className="text-xs font-bold text-on-surface flex items-center gap-1">
-                      <Clock size={12} className="text-primary" />
-                      {selectedStaff.lastUpdate}
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Cửa hàng hiện tại</div>
-                    <div className="text-xs font-bold text-on-surface flex items-center gap-1 truncate">
-                      <MapPin size={12} className="text-primary" />
-                      {selectedStaff.shopName || 'N/A'}
-                    </div>
-                  </div>
+                <div className="flex items-center gap-3 text-xs">
+                  <div className="p-1.5 bg-slate-50 rounded-lg text-slate-400"><Clock size={14} /></div>
+                  <div className="font-medium text-on-surface-variant">Check-in: {selectedStaff.lastTime}</div>
                 </div>
               </div>
 
-              <div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-3 flex justify-between items-center">
-                  Lộ trình hôm nay
-                  <span className="text-primary hover:underline cursor-pointer">Xem tất cả</span>
-                </div>
-                <div className="space-y-3 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
-                  <div className="flex gap-3 relative z-10">
-                    <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center">
-                      <Navigation size={12} />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-on-surface">Vị trí hiện tại</div>
-                      <div className="text-[10px] text-on-surface-variant">{selectedStaff.shopName || 'Đang di chuyển'}</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 relative z-10">
-                    <div className="w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center">
-                      <MapPin size={12} />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-on-surface">Cửa hàng ZRG #12</div>
-                      <div className="text-[10px] text-on-surface-variant">09:15 - Check-in thành công</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-3">Ảnh check-in mới nhất</div>
-                <div className="aspect-video bg-slate-100 rounded-2xl overflow-hidden border border-outline-variant group relative cursor-pointer">
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors flex items-center justify-center">
-                    <Camera size={24} className="text-white drop-shadow-md" />
-                  </div>
-                  <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300"></div>
-                </div>
+              <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
+                <button className="flex-1 py-2 bg-primary text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all flex items-center justify-center gap-1.5">
+                  <Camera size={12} /> XEM ẢNH
+                </button>
+                <button className="flex-1 py-2 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5">
+                  <Navigation size={12} /> CHỈ ĐƯỜNG
+                </button>
               </div>
             </div>
-
-            <div className="p-4 border-t border-outline-variant bg-slate-50">
-              <button className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                <Navigation size={18} />
-                Chỉ đường tới vị trí
-              </button>
-            </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 };
