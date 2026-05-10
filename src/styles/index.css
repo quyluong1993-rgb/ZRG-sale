@@ -1,67 +1,57 @@
+@import 'leaflet/dist/leaflet.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import 'leaflet/dist/leaflet.css';
+:root {
+  --primary: #003178;
+  --on-primary: #ffffff;
+  --primary-container: #d6e2ff;
+  --on-primary-container: #001a41;
+  
+  --surface: #f8f9ff;
+  --on-surface: #191c20;
+  --surface-variant: #e0e2ec;
+  --on-surface-variant: #44474e;
+  
+  --outline: #74777f;
+  --outline-variant: #c4c6d0;
+  
+  --surface-container-low: #f0f0f7;
+  --surface-container: #ebebe0;
+  --surface-container-high: #e5e6ee;
+  --surface-container-highest: #dfe0e8;
+
+  --margin-edge: 1rem;
+}
 
 @layer base {
   body {
-    @apply bg-surface text-on-surface antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    @apply bg-surface text-on-surface antialiased selection:bg-primary/20 selection:text-primary;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
   }
 }
 
 @layer components {
-  .rugged-card {
-    @apply bg-surface-container-lowest border-2 border-outline-variant shadow-premium rounded;
+  .card-rugged {
+    @apply bg-white border border-outline-variant rounded-2xl shadow-sm hover:shadow-md transition-all duration-300;
   }
   
-  .glass-card {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-glass rounded-xl;
-  }
-  
-  .industrial-btn {
-    @apply h-touch-target-min px-6 bg-primary text-on-primary font-label-bold rounded uppercase tracking-wider transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50;
+  .btn-rugged {
+    @apply px-6 py-3 bg-primary text-on-primary font-bold rounded-xl shadow-premium hover:shadow-premium-hover hover:brightness-110 active:scale-95 transition-all;
   }
 
-  .status-badge {
-    @apply px-2 py-1 rounded font-label-bold text-[12px] uppercase tracking-tighter border;
+  .shadow-premium {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1), inset 0 1px 0 0 rgb(255 255 255 / 0.1);
+  }
+
+  .shadow-premium-hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1), inset 0 1px 0 0 rgb(255 255 255 / 0.1);
   }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  @apply bg-surface-container-low;
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-outline-variant rounded hover:bg-outline transition-colors;
-}
-
-/* Fix for Material Symbols positioning */
-.material-symbols-outlined {
-  vertical-align: middle;
-  line-height: 1;
-}
-
-/* Leaflet Custom Styles */
 .leaflet-container {
+  width: 100%;
+  height: 100%;
   z-index: 1;
-}
-
-.rugged-tooltip {
-  background-color: white !important;
-  border: 2px solid #005fb8 !important;
-  border-radius: 4px !important;
-  padding: 4px 8px !important;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
-  color: #001d3d !important;
-  font-family: 'Inter', sans-serif !important;
-  font-weight: 700 !important;
-}
-
-.rugged-tooltip::before {
-  border-top-color: #005fb8 !important;
 }
