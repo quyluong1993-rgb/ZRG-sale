@@ -16,11 +16,21 @@ export const getFromGAS = async (action: string, params: Record<string, string> 
 };
 
 export const postToGAS = async (action: string, data: any) => {
-  await fetch(GAS_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action, ...data }),
-  });
-  return { success: true, status: 'success' };
+  // Use fetch with no-cors for simple POST to GAS to avoid preflight issues if needed,
+  // or use the standard api (axios) which is already configured.
+  // The GAS script must handle the action and data appropriately.
+  try {
+    const response = await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      body: JSON.stringify({ action, ...data }),
+    });
+    return { success: true, status: 'success' };
+  } catch (error) {
+    console.error('GAS Post Error:', error);
+    throw error;
+  }
 };
