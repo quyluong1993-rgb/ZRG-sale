@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Users, Plus, Search, MapPin, Building2, Phone, Loader2, Edit2 } from 'lucide-react';
 import AddDistributorModal from './components/AddDistributorModal';
 import EditDistributorModal from './components/EditDistributorModal';
