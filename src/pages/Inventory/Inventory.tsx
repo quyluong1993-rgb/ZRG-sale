@@ -9,7 +9,7 @@ const Inventory = () => {
   const logic = useInventoryLogic();
 
   return (
-    <div className="bg-[#F5F7F9] min-h-screen relative pb-10">
+    <div className=\"bg-[#F5F7F9] min-h-screen relative pb-10\">
       <InventoryHeader onAddClick={() => logic.setShowAddModal(true)} />
       
       <InventoryStats totalSku={logic.inventory.length} />
